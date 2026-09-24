@@ -1,0 +1,10 @@
+{
+  "name": "enterprise-ai-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Placeholder frontend — dashboard implemented in a later phase.",
+  "scripts": {
+    "dev": "echo Frontend placeholder — dashboard not implemented yet (see PLAN.md P18)",
+    "build": "echo Frontend placeholder — no build step yet"
+  }
+}

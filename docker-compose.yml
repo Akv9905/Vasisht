@@ -1,0 +1,17 @@
+version: "3.9"
+
+# Optional local infrastructure. Not required for P0/P1 scanning.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: enterprise_ai
+      POSTGRES_PASSWORD: enterprise_ai
+      POSTGRES_DB: enterprise_ai
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+.env
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node / frontend
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/dist/
+*.log
+npm-debug.log*
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Runtime data
+data/
+*.db
+*.sqlite3
+
+# Extracts / uploads
+uploads/
+tmp/
+temp/
+
+# Java sample build artifacts
+sample-projects/**/target/
+sample-projects/**/.gradle/
+sample-projects/**/build/
+
+# Secrets
+*.pem
+*.key
+credentials.json

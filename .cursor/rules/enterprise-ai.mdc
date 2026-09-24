@@ -1,0 +1,134 @@
+---
+description: Core rules for Enterprise AI Phase 1 development
+alwaysApply: true
+---
+
+# Enterprise AI Development Rules
+
+## Product Scope
+
+This project is Phase 1 of an Enterprise AI platform.
+
+Target:
+Java / Spring / Spring Boot legacy software intelligence.
+
+Do not expand into:
+- cybersecurity
+- cloud migration
+- customer support
+- universal coding
+- autonomous agents
+- mobile apps
+- foundation models
+
+## Cost
+
+The application must work without paid APIs.
+
+Paid providers are optional adapters only.
+
+Never hardcode:
+- API keys
+- paid model requirements
+- paid vector databases
+- cloud dependencies
+
+Local/free mode must remain functional.
+
+## Architecture
+
+Repository
+→ Parser
+→ Structured Metadata
+→ Graph
+→ Retrieval
+→ Evidence
+→ Optional LLM
+→ Analysis Result
+
+The LLM is NOT the source of truth.
+
+## Evidence
+
+Never invent:
+- classes
+- methods
+- dependencies
+- APIs
+- database tables
+- relationships
+- architecture
+
+If evidence is insufficient, explicitly state that.
+
+## Code Analysis
+
+Prefer deterministic/static analysis before AI reasoning.
+
+Do not send an entire repository to an LLM.
+
+Use graph traversal for dependency and impact analysis.
+
+## Safety
+
+Do not automatically modify production source code.
+
+Do not automatically deploy code.
+
+Treat uploaded repositories as sensitive.
+
+## Architecture
+
+Prefer a modular monolith.
+
+Do not introduce microservices unnecessarily.
+
+Use PostgreSQL before introducing a separate graph database.
+
+Keep parser, LLM and embedding providers replaceable.
+
+## Development
+
+Implement one phase at a time.
+
+Run tests after every change.
+
+Do not rewrite working modules unnecessarily.
+
+Do not create duplicate implementations.
+
+Before implementing a feature:
+1. inspect existing code
+2. inspect PLAN.md
+3. inspect related tests
+4. implement minimally
+5. test
+6. document
+
+## UI
+
+Do not prioritize visual polish over analysis correctness.
+
+The CLI and intelligence engine are more important than the dashboard.
+
+## Testing
+
+Every feature requires tests.
+
+Parser changes require parser tests.
+
+Graph changes require graph tests.
+
+Retrieval changes require retrieval tests.
+
+API changes require API tests.
+
+Security changes require security tests.
+
+## Core Product Question
+
+The product must eventually answer:
+
+"How does this request move through this unfamiliar Java/Spring application,
+what evidence supports that answer, and what could be affected if I change
+this component?"
