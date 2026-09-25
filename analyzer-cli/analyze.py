@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Enterprise AI analyzer CLI (P0/P1).
+Enterprise AI analyzer CLI (P0–P2).
 
 Usage:
   python analyzer-cli/analyze.py ./sample-projects/payment-service
@@ -21,6 +21,7 @@ if str(BACKEND) not in sys.path:
     sys.path.insert(0, str(BACKEND))
 
 from app.ingestion.scanner import scan_path  # noqa: E402
+from app.parser import parse_java_files  # noqa: E402
 
 
 def _configure_stdout() -> None:
@@ -37,15 +38,17 @@ def _safe_print(text: str) -> None:
     try:
         print(text)
     except UnicodeEncodeError:
-        print(text.replace("✓", "[OK]").encode(sys.stdout.encoding or "ascii", errors="replace").decode(
-            sys.stdout.encoding or "ascii", errors="replace"
-        ))
+        print(
+            text.replace("✓", "[OK]")
+            .encode(sys.stdout.encoding or "ascii", errors="replace")
+            .decode(sys.stdout.encoding or "ascii", errors="replace")
+        )
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="analyze",
-        description="Scan a Java/Spring repository (directory or ZIP). No paid APIs required.",
+        description="Scan and parse a Java/Spring repository. No paid APIs required.",
     )
     parser.add_argument(
         "path",
@@ -54,12 +57,22 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--json",
         action="store_true",
-        help="Emit machine-readable JSON inventory instead of summary lines",
+        help="Emit machine-readable JSON (scan + parse) instead of summary lines",
     )
     parser.add_argument(
         "--list-files",
         action="store_true",
         help="List discovered file paths under each category",
+    )
+    parser.add_argument(
+        "--list-types",
+        action="store_true",
+        help="List discovered packages, classes, interfaces, and endpoints",
+    )
+    parser.add_argument(
+        "--scan-only",
+        action="store_true",
+        help="Skip Java parsing (P1 inventory only)",
     )
     return parser
 
@@ -70,7 +83,7 @@ def main(argv: list[str] | None = None) -> int:
     target = Path(args.path)
 
     try:
-        result = scan_path(target)
+        scan = scan_path(target)
     except FileNotFoundError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
@@ -81,51 +94,78 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 
+    parse_result = None
+    if not args.scan_only and scan.java_files:
+        parse_result = parse_java_files(scan.root, scan.java_files)
+
     if args.json:
         payload = {
-            "source": result.source,
-            "root": result.root,
-            "from_zip": result.from_zip,
-            "total_files": result.total_files,
-            "java_files": result.java_files,
-            "configuration_files": result.configuration_files,
-            "sql_files": result.sql_files,
-            "documentation_files": result.documentation_files,
-            "ignored_dirs": result.ignored_dirs,
+            "source": scan.source,
+            "root": scan.root,
+            "from_zip": scan.from_zip,
+            "total_files": scan.total_files,
+            "java_files": scan.java_files,
+            "configuration_files": scan.configuration_files,
+            "sql_files": scan.sql_files,
+            "documentation_files": scan.documentation_files,
+            "ignored_dirs": scan.ignored_dirs,
             "files": [
                 {
                     "relative_path": f.relative_path,
                     "size_bytes": f.size_bytes,
                     "categories": f.categories,
                 }
-                for f in result.files
+                for f in scan.files
             ],
+            "parse": parse_result.to_dict() if parse_result else None,
         }
         _safe_print(json.dumps(payload, indent=2))
         return 0
 
-    _safe_print(f"Source: {result.source}")
-    if result.from_zip:
-        _safe_print(f"Extracted to: {result.extract_dir}")
-    _safe_print(f"Root: {result.root}")
+    _safe_print(f"Source: {scan.source}")
+    if scan.from_zip:
+        _safe_print(f"Extracted to: {scan.extract_dir}")
+    _safe_print(f"Root: {scan.root}")
     _safe_print("")
-    for line in result.summary_lines():
+    for line in scan.summary_lines():
         _safe_print(line)
+
+    if parse_result is not None:
+        for line in parse_result.summary_lines():
+            _safe_print(line)
 
     if args.list_files:
         _safe_print("")
         _safe_print("Java files:")
-        for path in result.java_files:
+        for path in scan.java_files:
             _safe_print(f"  - {path}")
         _safe_print("Configuration:")
-        for path in result.configuration_files:
+        for path in scan.configuration_files:
             _safe_print(f"  - {path}")
         _safe_print("SQL:")
-        for path in result.sql_files:
+        for path in scan.sql_files:
             _safe_print(f"  - {path}")
         _safe_print("Documentation:")
-        for path in result.documentation_files:
+        for path in scan.documentation_files:
             _safe_print(f"  - {path}")
+
+    if args.list_types and parse_result is not None:
+        _safe_print("")
+        _safe_print("Packages:")
+        for pkg in parse_result.packages:
+            _safe_print(f"  - {pkg}")
+        _safe_print("Classes:")
+        for cls in parse_result.classes:
+            _safe_print(f"  - {cls.qualified_name}")
+        _safe_print("Interfaces:")
+        for iface in parse_result.interfaces:
+            _safe_print(f"  - {iface.qualified_name} extends={iface.extends}")
+        _safe_print("Endpoints:")
+        for ep in parse_result.endpoints:
+            _safe_print(f"  - {ep.http_method} {ep.path} -> {ep.handler_class}.{ep.handler_method}")
+        _safe_print("Database references:")
+        for ref in parse_result.database_references:
+            _safe_print(f"  - {ref.kind}: {ref.name} ({ref.owning_type})")
 
     return 0
 
