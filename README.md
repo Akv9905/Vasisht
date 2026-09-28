@@ -10,7 +10,8 @@ Local/free legacy Java & Spring software intelligence platform.
 |-------|--------|--------|
 | **P0** | Project structure, FastAPI health, config, frontend placeholder, tests | Done |
 | **P1** | Repository scanner (directory + safe ZIP), file inventory, detectors, sample project | Done |
-| P2+ | Java parser, graph, retrieval, LLM, dashboard, … | Not started |
+| **P2** | Java parser abstraction, AST extraction, Spring/REST/DB refs | Done |
+| P3+ | Dependency graph, persistence, retrieval, LLM, dashboard, … | Not started |
 
 ## Repository layout
 
@@ -44,7 +45,7 @@ pip install -r requirements.txt
 
 Optional: copy `.env.example` to `.env` at the repo root.
 
-### 2. Scan the sample project (P1)
+### 2. Scan and parse the sample project (P1 + P2)
 
 From the repository root:
 
@@ -62,7 +63,9 @@ Useful flags:
 
 ```bash
 python analyzer-cli/analyze.py ./sample-projects/payment-service --list-files
+python analyzer-cli/analyze.py ./sample-projects/payment-service --list-types
 python analyzer-cli/analyze.py ./sample-projects/payment-service --json
+python analyzer-cli/analyze.py ./sample-projects/payment-service --scan-only
 ```
 
 ZIP archives are also supported (path traversal is blocked):
@@ -115,9 +118,10 @@ The LLM is **not** the source of truth. Deterministic scanning and (later) parsi
 - Multiple callers (`PaymentController`, `RefundController`)
 - `PaymentServiceTest`
 
-## Known limitations (P0/P1)
+## Known limitations (P0–P2)
 
-- No Java AST parsing yet (P2)
-- No dependency graph, Q&A, impact, or risk analysis
+- No dependency graph, Q&A, impact, or risk analysis yet (P3+)
 - Frontend is a placeholder only
-- PostgreSQL is configured but not required for scanning
+- PostgreSQL is configured but not required for scanning/parsing
+- Parser uses `javalang` — some newer Java syntax may fail per-file (reported as parse errors)
+- Method-call extraction is syntactic (qualifier + name), not fully resolved to declarations
