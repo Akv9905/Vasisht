@@ -2,9 +2,26 @@
   "name": "enterprise-ai-frontend",
   "version": "0.1.0",
   "private": true,
-  "description": "Placeholder frontend — dashboard implemented in a later phase.",
+  "type": "module",
   "scripts": {
-    "dev": "echo Frontend placeholder — dashboard not implemented yet (see PLAN.md P18)",
-    "build": "echo Frontend placeholder — no build step yet"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.2",
+    "@testing-library/react": "^14.2.1",
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "@vitejs/plugin-react": "^4.2.1",
+    "jsdom": "^24.0.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.1.6",
+    "vitest": "^1.4.0"
   }
 }

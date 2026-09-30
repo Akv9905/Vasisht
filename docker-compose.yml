@@ -1,9 +1,7 @@
-version: "3.9"
-
-# Optional local infrastructure. Not required for P0/P1 scanning.
 services:
   postgres:
     image: postgres:16-alpine
+    container_name: enterprise_ai_postgres
     environment:
       POSTGRES_USER: enterprise_ai
       POSTGRES_PASSWORD: enterprise_ai
@@ -12,6 +10,43 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: enterprise_ai_backend
+    environment:
+      APP_NAME: "Enterprise AI"
+      APP_ENV: production
+      DEBUG: "false"
+      DATABASE_URL: postgresql+psycopg://enterprise_ai:enterprise_ai@postgres:5432/enterprise_ai
+      LLM_ENABLED: "false"
+      LLM_PROVIDER: none
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: enterprise_ai_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
 
 volumes:
   pgdata:

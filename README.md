@@ -1,4 +1,4 @@
-# Enterprise AI — Phase 1 (P0 + P1)
+# Enterprise AI — Phase 1 (P0–P4)
 
 Local/free legacy Java & Spring software intelligence platform.
 
@@ -11,7 +11,9 @@ Local/free legacy Java & Spring software intelligence platform.
 | **P0** | Project structure, FastAPI health, config, frontend placeholder, tests | Done |
 | **P1** | Repository scanner (directory + safe ZIP), file inventory, detectors, sample project | Done |
 | **P2** | Java parser abstraction, AST extraction, Spring/REST/DB refs | Done |
-| P3+ | Dependency graph, persistence, retrieval, LLM, dashboard, … | Not started |
+| **P3** | In-memory dependency graph extraction | Done |
+| **P4** | PostgreSQL persistence models, migrations, analysis snapshots | In progress (code and SQLite migration verified; live PostgreSQL run pending) |
+| P5+ | Graph traversal, retrieval, LLM, dashboard, … | Not started |
 
 ## Repository layout
 
@@ -74,7 +76,28 @@ ZIP archives are also supported (path traversal is blocked):
 python analyzer-cli/analyze.py ./path/to/repo.zip
 ```
 
-### 3. Health API (P0)
+### 3. Persist analysis results (P4)
+
+Start the local PostgreSQL service and apply the schema migration:
+
+```bash
+docker compose up -d --wait postgres
+cd backend
+alembic upgrade head
+cd ..
+```
+
+Copy `.env.example` to `.env` if needed, then persist the sample analysis:
+
+```bash
+python analyzer-cli/analyze.py ./sample-projects/payment-service --persist
+```
+
+Each run is stored as a historical snapshot. To use another project label, add
+`--project-name "My project"`. `DATABASE_URL` can point at another PostgreSQL
+database; migrations must be applied before using `--persist`.
+
+### 4. Health API (P0)
 
 ```bash
 cd backend
@@ -83,7 +106,7 @@ uvicorn app.main:app --reload --app-dir .
 
 Then open `http://127.0.0.1:8000/health`.
 
-### 4. Tests
+### 5. Tests
 
 ```bash
 cd backend
@@ -103,7 +126,7 @@ The LLM is **not** the source of truth. Deterministic scanning and (later) parsi
 | Capability | Default |
 |------------|---------|
 | Repository scan | Local filesystem / ZIP |
-| Database | Optional PostgreSQL (unused in P0/P1 scan path) |
+| Database | Local PostgreSQL for persistence; scanning remains available without it |
 | LLM | Disabled (`LLM_ENABLED=false`) |
 | Embeddings | Not required |
 
@@ -118,9 +141,9 @@ The LLM is **not** the source of truth. Deterministic scanning and (later) parsi
 - Multiple callers (`PaymentController`, `RefundController`)
 - `PaymentServiceTest`
 
-## Known limitations (P0–P2)
+## Known limitations (P0–P4)
 
-- No dependency graph, Q&A, impact, or risk analysis yet (P3+)
+- Dependency graph extraction exists; traversal, Q&A, impact, and risk analysis remain later phases
 - Frontend is a placeholder only
 - PostgreSQL is configured but not required for scanning/parsing
 - Parser uses `javalang` — some newer Java syntax may fail per-file (reported as parse errors)
